@@ -1,8 +1,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-// Placeholder landing view — Phase 2 replaces this with real practitioner
-// (profile/services/availability) and client (browse) content per role.
+// A practitioner who hasn't published yet always lands on the onboarding
+// checklist first — matches the plan's "guided post-signup onboarding"
+// requirement. Once published, or for clients, this is a placeholder home
+// (client browse/booking content and the published-practitioner dashboard —
+// earnings, upcoming bookings — arrive in later phases).
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -18,6 +21,18 @@ export default async function DashboardPage() {
     .select("full_name, role")
     .eq("id", user.id)
     .single();
+
+  if (profile?.role === "practitioner") {
+    const { data: practitionerProfile } = await supabase
+      .from("practitioner_profiles")
+      .select("is_published")
+      .eq("profile_id", user.id)
+      .single();
+
+    if (!practitionerProfile?.is_published) {
+      redirect("/dashboard/onboarding");
+    }
+  }
 
   return (
     <div>
