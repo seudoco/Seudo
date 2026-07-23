@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { FieldValidityIcon, fieldBorderClassName } from "@/components/ui/field-validity-icon";
+import { specialtyColor } from "@/lib/specialty-colors";
 
 const DURATIONS = [15, 30, 45, 60, 90] as const;
 
@@ -14,15 +16,18 @@ export interface ServiceFormValues {
   description: string;
   duration_minutes: (typeof DURATIONS)[number];
   price_usd: number;
+  specialty_id: number | null;
 }
 
 export function ServiceForm({
   initial,
+  allSpecialties,
   onSubmit,
   onCancel,
   submitLabel,
 }: {
   initial: ServiceFormValues;
+  allSpecialties: { id: number; name: string }[];
   onSubmit: (values: ServiceFormValues) => Promise<string | null>;
   onCancel: () => void;
   submitLabel: string;
@@ -60,6 +65,36 @@ export function ServiceForm({
             required
           />
           <FieldValidityIcon state={titleState} />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label>Specialty</Label>
+        <div className="flex flex-wrap gap-1.5">
+          {allSpecialties.map((s) => {
+            const color = specialtyColor(s.name);
+            const active = values.specialty_id === s.id;
+            return (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setValues((v) => ({ ...v, specialty_id: active ? null : s.id }))}
+                className="cursor-pointer"
+              >
+                <Badge
+                  variant="outline"
+                  className={`border-transparent transition-transform ${active ? "scale-105 ring-2 ring-offset-1" : "opacity-60 hover:opacity-100"}`}
+                  style={{
+                    backgroundColor: color.bg,
+                    color: color.text,
+                    ["--tw-ring-color" as string]: color.text,
+                  }}
+                >
+                  {s.name}
+                </Badge>
+              </button>
+            );
+          })}
         </div>
       </div>
 

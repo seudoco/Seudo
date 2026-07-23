@@ -114,6 +114,7 @@ export interface Database {
           description: string | null;
           duration_minutes: 15 | 30 | 45 | 60 | 90;
           price_usd: number;
+          specialty_id: number | null;
           is_active: boolean;
           created_at: string;
           updated_at: string;
@@ -125,6 +126,7 @@ export interface Database {
           description?: string | null;
           duration_minutes: 15 | 30 | 45 | 60 | 90;
           price_usd: number;
+          specialty_id?: number | null;
           is_active?: boolean;
         };
         Update: Partial<

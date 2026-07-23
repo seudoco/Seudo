@@ -41,6 +41,15 @@ export default async function DashboardLayout({
           <Link href="/practitioners" className="text-sm text-muted-foreground hover:text-foreground">
             Browse
           </Link>
+          {profile?.role === "practitioner" && (
+            <Link
+              href={`/practitioners/${user.id}`}
+              target="_blank"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Profile
+            </Link>
+          )}
         </div>
         <div className="flex items-center gap-4">
           {profile && (

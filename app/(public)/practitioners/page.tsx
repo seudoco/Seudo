@@ -14,6 +14,10 @@ export const metadata: Metadata = {
     "Search vetted tarot readers, astrologers, reiki healers, and spiritual coaches by name, location, or specialty.",
 };
 
+// A newly published listing (or a newly added service) must show up here
+// immediately for other visitors — never serve a stale cached render.
+export const dynamic = "force-dynamic";
+
 type SearchParams = Record<string, string | string[] | undefined>;
 
 function first(value: string | string[] | undefined): string | undefined {

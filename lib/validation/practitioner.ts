@@ -62,6 +62,7 @@ export const serviceSchema = z.object({
     z.literal(90),
   ]),
   price_usd: z.coerce.number().positive().max(100000),
+  specialty_id: z.number().int().optional().nullable(),
   is_active: z.boolean().default(true),
 });
 

@@ -4,15 +4,29 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ServiceForm, type ServiceFormValues } from "@/components/dashboard/ServiceForm";
+import { specialtyColor } from "@/lib/specialty-colors";
 
 interface Service extends ServiceFormValues {
   id: string;
   is_active: boolean;
 }
 
-const EMPTY: ServiceFormValues = { title: "", description: "", duration_minutes: 60, price_usd: 50 };
+const EMPTY: ServiceFormValues = {
+  title: "",
+  description: "",
+  duration_minutes: 60,
+  price_usd: 50,
+  specialty_id: null,
+};
 
-export function ServicesManager({ initialServices }: { initialServices: Service[] }) {
+export function ServicesManager({
+  initialServices,
+  allSpecialties,
+}: {
+  initialServices: Service[];
+  allSpecialties: { id: number; name: string }[];
+}) {
+  const specialtyName = (id: number | null) => allSpecialties.find((s) => s.id === id)?.name;
   const [services, setServices] = useState<Service[]>(initialServices);
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -78,6 +92,7 @@ export function ServicesManager({ initialServices }: { initialServices: Service[
           <ServiceForm
             key={service.id}
             initial={service}
+            allSpecialties={allSpecialties}
             submitLabel="Save changes"
             onCancel={() => setEditingId(null)}
             onSubmit={(values) => updateService(service.id, values)}
@@ -88,6 +103,18 @@ export function ServicesManager({ initialServices }: { initialServices: Service[
               <div className="flex items-center gap-2">
                 <p className="font-medium text-foreground break-words">{service.title}</p>
                 {!service.is_active && <Badge variant="secondary">Inactive</Badge>}
+                {specialtyName(service.specialty_id) && (
+                  <Badge
+                    variant="outline"
+                    className="border-transparent"
+                    style={{
+                      backgroundColor: specialtyColor(specialtyName(service.specialty_id)!).bg,
+                      color: specialtyColor(specialtyName(service.specialty_id)!).text,
+                    }}
+                  >
+                    {specialtyName(service.specialty_id)}
+                  </Badge>
+                )}
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
                 {service.duration_minutes} min ·{" "}
@@ -120,6 +147,7 @@ export function ServicesManager({ initialServices }: { initialServices: Service[
       {creating ? (
         <ServiceForm
           initial={EMPTY}
+          allSpecialties={allSpecialties}
           submitLabel="Create service"
           onCancel={() => setCreating(false)}
           onSubmit={createService}

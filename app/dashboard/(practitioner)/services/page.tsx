@@ -9,11 +9,10 @@ export default async function ServicesPage() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: services } = await supabase
-    .from("services")
-    .select("*")
-    .eq("practitioner_id", user.id)
-    .order("created_at", { ascending: false });
+  const [{ data: services }, { data: allSpecialties }] = await Promise.all([
+    supabase.from("services").select("*").eq("practitioner_id", user.id).order("created_at", { ascending: false }),
+    supabase.from("specialties").select("id, name").order("id"),
+  ]);
 
   return (
     <div>
@@ -23,6 +22,7 @@ export default async function ServicesPage() {
       </p>
       <ServicesManager
         initialServices={(services ?? []).map((s) => ({ ...s, description: s.description ?? "" }))}
+        allSpecialties={allSpecialties ?? []}
       />
     </div>
   );

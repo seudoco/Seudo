@@ -6,6 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { AuroraBackground } from "@/components/layout/AuroraBackground";
 import { specialtyColor } from "@/lib/specialty-colors";
 
+// A practitioner's newly published listing/service must show up immediately
+// for other visitors — never serve a stale cached render.
+export const dynamic = "force-dynamic";
+
 // Explicit shape for this joined query — the hand-written types/database.ts
 // (see its top comment) has no FK "Relationships" metadata, so nested
 // selects like practitioner_specialties(specialties(name)) can't be
@@ -31,6 +35,7 @@ interface PractitionerDetail {
     duration_minutes: number;
     price_usd: number;
     is_active: boolean;
+    specialties: { name: string } | null;
   }[];
 }
 
@@ -84,7 +89,7 @@ export default async function PractitionerProfilePage({
   const { data: practitioner } = await supabase
     .from("practitioner_profiles")
     .select<string, PractitionerDetail>(
-      "profile_id, display_name, bio, photo_url, city, country, languages, years_experience, is_published, avg_rating, review_count, practitioner_specialties(specialties(name)), services(id, title, description, duration_minutes, price_usd, is_active)"
+      "profile_id, display_name, bio, photo_url, city, country, languages, years_experience, is_published, avg_rating, review_count, practitioner_specialties(specialties(name)), services(id, title, description, duration_minutes, price_usd, is_active, specialties(name))"
     )
     .eq("profile_id", id)
     .single();
@@ -223,7 +228,21 @@ export default async function PractitionerProfilePage({
           {activeServices.map((s) => (
             <li key={s.id} className="rounded-xl border border-border p-4">
               <div className="flex items-start justify-between gap-4">
-                <p className="min-w-0 break-words font-medium text-foreground">{s.title}</p>
+                <div className="min-w-0 flex items-center gap-2">
+                  <p className="min-w-0 break-words font-medium text-foreground">{s.title}</p>
+                  {s.specialties?.name && (
+                    <Badge
+                      variant="outline"
+                      className="shrink-0 border-transparent"
+                      style={{
+                        backgroundColor: specialtyColor(s.specialties.name).bg,
+                        color: specialtyColor(s.specialties.name).text,
+                      }}
+                    >
+                      {s.specialties.name}
+                    </Badge>
+                  )}
+                </div>
                 <p className="shrink-0 text-sm text-muted-foreground">
                   {s.duration_minutes} min ·{" "}
                   <span className="font-medium text-success">${s.price_usd}</span>
