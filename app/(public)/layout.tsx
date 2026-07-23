@@ -27,7 +27,7 @@ export default async function PublicLayout({
         </Link>
         <div className="flex items-center gap-4">
           <Link href="/practitioners" className="text-sm text-muted-foreground hover:text-foreground">
-            Browse practitioners
+            Browse
           </Link>
           {user ? (
             <>

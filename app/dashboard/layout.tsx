@@ -39,7 +39,7 @@ export default async function DashboardLayout({
             Seudo
           </Link>
           <Link href="/practitioners" className="text-sm text-muted-foreground hover:text-foreground">
-            Browse practitioners
+            Browse
           </Link>
         </div>
         <div className="flex items-center gap-4">
