@@ -82,7 +82,7 @@ export function WorkingHours({ initialRows }: { initialRows: TemplateRow[] }) {
 
       {message && (
         <p
-          className={message.type === "error" ? "text-sm text-destructive" : "text-sm text-foreground"}
+          className={message.type === "error" ? "text-sm text-destructive" : "text-sm font-medium text-success"}
           role={message.type === "error" ? "alert" : "status"}
         >
           {message.text}

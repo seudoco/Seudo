@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { signUpAction, type ActionState } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldValidityIcon, fieldBorderClassName } from "@/components/ui/field-validity-icon";
 import type { UserRole } from "@/types/database";
 
 export function SignUpForm({ role }: { role: UserRole }) {
@@ -112,19 +113,35 @@ function Field({
   required?: boolean;
   helperText?: string;
 }) {
+  const [state, setState] = useState<"valid" | "invalid" | null>(null);
+
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={name}>
         {label}
         {required && <span aria-hidden="true"> *</span>}
       </Label>
-      <Input
-        id={name}
-        name={name}
-        type={type}
-        autoComplete={autoComplete}
-        required={required}
-      />
+      <div className="relative">
+        <Input
+          id={name}
+          name={name}
+          type={type}
+          autoComplete={autoComplete}
+          required={required}
+          className={fieldBorderClassName(state)}
+          onBlur={(e) => {
+            if (!e.target.value) {
+              setState(null);
+              return;
+            }
+            setState(e.target.checkValidity() ? "valid" : "invalid");
+          }}
+          onChange={(e) => {
+            if (state === "invalid" && e.target.checkValidity()) setState("valid");
+          }}
+        />
+        <FieldValidityIcon state={state} />
+      </div>
       {helperText && <p className="text-xs text-muted-foreground">{helperText}</p>}
     </div>
   );

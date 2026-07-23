@@ -85,8 +85,10 @@ export default async function PractitionerProfilePage({
             <span className="text-xs text-muted-foreground">No photo</span>
           )}
         </div>
-        <div>
-          <h1 className="font-heading text-2xl font-semibold text-foreground">{practitioner.display_name}</h1>
+        <div className="min-w-0">
+          <h1 className="font-heading text-2xl font-semibold text-foreground break-words">
+            {practitioner.display_name}
+          </h1>
           {(practitioner.city || practitioner.country) && (
             <p className="text-sm text-muted-foreground">
               {[practitioner.city, practitioner.country].filter(Boolean).join(", ")}
@@ -110,7 +112,9 @@ export default async function PractitionerProfilePage({
         </div>
       )}
 
-      {practitioner.bio && <p className="mt-6 leading-relaxed text-foreground">{practitioner.bio}</p>}
+      {practitioner.bio && (
+        <p className="mt-6 leading-relaxed text-foreground break-words">{practitioner.bio}</p>
+      )}
 
       <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
         {practitioner.years_experience !== null && (
@@ -134,13 +138,18 @@ export default async function PractitionerProfilePage({
         <ul className="mt-4 flex flex-col gap-3">
           {activeServices.map((s) => (
             <li key={s.id} className="rounded-xl border border-border p-4">
-              <div className="flex items-center justify-between">
-                <p className="font-medium text-foreground">{s.title}</p>
-                <p className="text-sm text-muted-foreground">
-                  {s.duration_minutes} min · ${s.price_usd}
+              <div className="flex items-start justify-between gap-4">
+                <p className="min-w-0 break-words font-medium text-foreground">{s.title}</p>
+                <p className="shrink-0 text-sm text-muted-foreground">
+                  {s.duration_minutes} min ·{" "}
+                  <span className="font-medium text-success">${s.price_usd}</span>
                 </p>
               </div>
-              {s.description && <p className="mt-1 text-sm text-muted-foreground">{s.description}</p>}
+              {s.description && (
+                <p className="mt-1 text-sm leading-relaxed text-muted-foreground break-words">
+                  {s.description}
+                </p>
+              )}
             </li>
           ))}
         </ul>

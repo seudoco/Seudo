@@ -80,13 +80,17 @@ function Step({
 }) {
   const content = (
     <div
-      className={`flex items-start gap-3 rounded-xl border border-border p-4 ${
-        disabled ? "opacity-60" : "hover:border-foreground"
+      className={`flex items-start gap-3 rounded-xl border p-4 transition-colors ${
+        disabled
+          ? "border-border opacity-60"
+          : done
+            ? "border-success/30 bg-success/5 hover:border-success/50"
+            : "border-border hover:border-foreground"
       }`}
     >
       <div
-        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${
-          done ? "bg-foreground text-background" : "border border-border text-muted-foreground"
+        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs transition-colors ${
+          done ? "bg-success text-success-foreground" : "border border-border text-muted-foreground"
         }`}
       >
         {done ? "✓" : ""}

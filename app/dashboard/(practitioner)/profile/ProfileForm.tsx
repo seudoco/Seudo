@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { AsyncSearchableSelect, SearchableSelect } from "@/components/ui/searchable-select";
 import { MultiSearchableSelect } from "@/components/ui/multi-searchable-select";
 import { PhotoCropDialog } from "@/components/dashboard/PhotoCropDialog";
+import { FieldValidityIcon, fieldBorderClassName } from "@/components/ui/field-validity-icon";
 
 interface ProfileFormValues {
   display_name: string;
@@ -42,6 +43,7 @@ export function ProfileForm({
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [pendingImageSrc, setPendingImageSrc] = useState<string | null>(null);
+  const [displayNameState, setDisplayNameState] = useState<"valid" | "invalid" | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const countryRef = useRef(values.country);
 
@@ -155,12 +157,20 @@ export function ProfileForm({
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="display_name">Display name</Label>
-        <Input
-          id="display_name"
-          value={values.display_name}
-          onChange={(e) => setValues((v) => ({ ...v, display_name: e.target.value }))}
-          required
-        />
+        <div className="relative">
+          <Input
+            id="display_name"
+            value={values.display_name}
+            className={fieldBorderClassName(displayNameState)}
+            onChange={(e) => {
+              setValues((v) => ({ ...v, display_name: e.target.value }));
+              if (displayNameState === "invalid" && e.target.value.trim()) setDisplayNameState("valid");
+            }}
+            onBlur={(e) => setDisplayNameState(e.target.value.trim() ? "valid" : "invalid")}
+            required
+          />
+          <FieldValidityIcon state={displayNameState} />
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -261,7 +271,7 @@ export function ProfileForm({
 
       {message && (
         <p
-          className={message.type === "error" ? "text-sm text-destructive" : "text-sm text-foreground"}
+          className={message.type === "error" ? "text-sm text-destructive" : "text-sm font-medium text-success"}
           role={message.type === "error" ? "alert" : "status"}
         >
           {message.text}

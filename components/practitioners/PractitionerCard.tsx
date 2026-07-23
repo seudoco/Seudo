@@ -18,7 +18,7 @@ export function PractitionerCard({ practitioner }: { practitioner: PractitionerC
   return (
     <Link
       href={`/practitioners/${practitioner.profile_id}`}
-      className="flex flex-col gap-3 rounded-xl border border-border p-4 transition-colors hover:border-foreground"
+      className="flex flex-col gap-3 rounded-xl border border-border p-4 transition-all hover:-translate-y-0.5 hover:border-foreground hover:shadow-sm"
     >
       <div className="flex items-center gap-3">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary">
@@ -62,7 +62,7 @@ export function PractitionerCard({ practitioner }: { practitioner: PractitionerC
             : "New"}
         </span>
         {practitioner.startingPrice !== null && (
-          <span className="font-medium text-foreground">from ${practitioner.startingPrice}</span>
+          <span className="font-medium text-success">from ${practitioner.startingPrice}</span>
         )}
       </div>
     </Link>

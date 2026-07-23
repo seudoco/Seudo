@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FieldValidityIcon, fieldBorderClassName } from "@/components/ui/field-validity-icon";
 
 const DURATIONS = [15, 30, 45, 60, 90] as const;
 
@@ -29,6 +30,8 @@ export function ServiceForm({
   const [values, setValues] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [titleState, setTitleState] = useState<"valid" | "invalid" | null>(null);
+  const [priceState, setPriceState] = useState<"valid" | "invalid" | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,13 +46,21 @@ export function ServiceForm({
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-border p-4">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="service_title">Title</Label>
-        <Input
-          id="service_title"
-          value={values.title}
-          onChange={(e) => setValues((v) => ({ ...v, title: e.target.value }))}
-          placeholder="30-minute Tarot Reading"
-          required
-        />
+        <div className="relative">
+          <Input
+            id="service_title"
+            value={values.title}
+            className={fieldBorderClassName(titleState)}
+            onChange={(e) => {
+              setValues((v) => ({ ...v, title: e.target.value }));
+              if (titleState === "invalid" && e.target.value.trim()) setTitleState("valid");
+            }}
+            onBlur={(e) => setTitleState(e.target.value.trim() ? "valid" : "invalid")}
+            placeholder="30-minute Tarot Reading"
+            required
+          />
+          <FieldValidityIcon state={titleState} />
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -85,15 +96,27 @@ export function ServiceForm({
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="service_price">Price (USD)</Label>
-          <Input
-            id="service_price"
-            type="number"
-            min={1}
-            step="0.01"
-            value={values.price_usd}
-            onChange={(e) => setValues((v) => ({ ...v, price_usd: Number(e.target.value) }))}
-            required
-          />
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-2.5 flex items-center text-sm text-muted-foreground">
+              $
+            </span>
+            <Input
+              id="service_price"
+              type="number"
+              min={1}
+              step="0.01"
+              value={values.price_usd}
+              className={`pl-5 ${fieldBorderClassName(priceState)}`}
+              onChange={(e) => {
+                const next = Number(e.target.value);
+                setValues((v) => ({ ...v, price_usd: next }));
+                if (priceState === "invalid" && next > 0) setPriceState("valid");
+              }}
+              onBlur={(e) => setPriceState(Number(e.target.value) > 0 ? "valid" : "invalid")}
+              required
+            />
+            <FieldValidityIcon state={priceState} />
+          </div>
         </div>
       </div>
 

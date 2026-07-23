@@ -90,7 +90,8 @@ export function ServicesManager({ initialServices }: { initialServices: Service[
                 {!service.is_active && <Badge variant="secondary">Inactive</Badge>}
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                {service.duration_minutes} min · ${service.price_usd}
+                {service.duration_minutes} min ·{" "}
+                <span className="font-medium text-success">${service.price_usd}</span>
               </p>
               {service.description && (
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground break-words">{service.description}</p>
