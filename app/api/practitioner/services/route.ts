@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { serviceSchema } from "@/lib/validation/practitioner";
+import { detectSpecialtyId } from "@/lib/practitioners/auto-tag";
 
 export async function GET() {
   const supabase = await createClient();
@@ -37,9 +38,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
   }
 
+  let specialtyId = parsed.data.specialty_id ?? null;
+  if (specialtyId === null) {
+    const { data: specialties } = await supabase.from("specialties").select("id, name");
+    specialtyId = detectSpecialtyId(`${parsed.data.title} ${parsed.data.description ?? ""}`, specialties ?? []);
+  }
+
   const { data, error } = await supabase
     .from("services")
-    .insert({ ...parsed.data, practitioner_id: user.id })
+    .insert({ ...parsed.data, specialty_id: specialtyId, practitioner_id: user.id })
     .select()
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
