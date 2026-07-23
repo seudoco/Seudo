@@ -49,14 +49,25 @@ async function resolvePractitionerIdsForQuery(
 
   const { data: matchingSpecialties } = await supabase.rpc("search_specialties_fuzzy", { search_term: term });
   if (matchingSpecialties && matchingSpecialties.length > 0) {
+    const specialtyIds = matchingSpecialties.map((s) => s.id);
+
+    // Profile-level tags (practitioner_specialties) — a practitioner's own
+    // "I do this" badges.
     const { data: links } = await supabase
       .from("practitioner_specialties")
       .select("practitioner_id")
-      .in(
-        "specialty_id",
-        matchingSpecialties.map((s) => s.id)
-      );
+      .in("specialty_id", specialtyIds);
     for (const link of links ?? []) ids.add(link.practitioner_id);
+
+    // Per-service tags — a practitioner should also surface if any one of
+    // their services is tagged with the matched specialty, even if their
+    // profile-level badges don't include it (see 0008/0009 migrations).
+    const { data: taggedServices } = await supabase
+      .from("services")
+      .select("practitioner_id")
+      .eq("is_active", true)
+      .in("specialty_id", specialtyIds);
+    for (const service of taggedServices ?? []) ids.add(service.practitioner_id);
   }
 
   return ids;
