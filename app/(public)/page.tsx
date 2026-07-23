@@ -45,7 +45,7 @@ export default async function Home() {
           {FEATURED_SPECIALTIES.map((name) => {
             const color = specialtyColor(name);
             return (
-              <Link key={name} href="/practitioners">
+              <Link key={name} href={`/practitioners?specialty=${encodeURIComponent(name)}`}>
                 <Badge
                   variant="outline"
                   className="cursor-pointer border-transparent px-3 py-1 text-sm transition-transform hover:scale-105"

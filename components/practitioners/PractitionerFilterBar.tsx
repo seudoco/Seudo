@@ -6,15 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { specialtyColor } from "@/lib/specialty-colors";
 
-const DURATIONS = [15, 30, 45, 60, 90] as const;
-
-export function PractitionerFilterBar({
-  specialtyNames,
-  view,
-}: {
-  specialtyNames: string[];
-  view: "practitioners" | "services";
-}) {
+export function PractitionerFilterBar({ specialtyNames }: { specialtyNames: string[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -50,26 +42,11 @@ export function PractitionerFilterBar({
 
   return (
     <div className="mt-6 flex flex-col gap-4">
-      <div className="flex gap-1 rounded-lg border border-border p-1 w-fit">
-        {(["practitioners", "services"] as const).map((v) => (
-          <button
-            key={v}
-            type="button"
-            onClick={() => setParams({ view: v === "practitioners" ? null : v })}
-            className={`cursor-pointer rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-              view === v ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {v === "practitioners" ? "Practitioners" : "Services"}
-          </button>
-        ))}
-      </div>
-
       <div className="flex flex-wrap items-center gap-3">
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder={view === "practitioners" ? "Search practitioners…" : "Search services…"}
+          placeholder="Search by name, location, or specialty…"
           className="max-w-xs"
         />
 
@@ -78,54 +55,11 @@ export function PractitionerFilterBar({
           onChange={(e) => setParams({ sort: e.target.value || null })}
           className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm cursor-pointer"
         >
-          {view === "practitioners" ? (
-            <>
-              <option value="">Top rated</option>
-              <option value="newest">Newest</option>
-            </>
-          ) : (
-            <>
-              <option value="">Price: low to high</option>
-              <option value="price_desc">Price: high to low</option>
-              <option value="newest">Newest</option>
-            </>
-          )}
+          <option value="">Top rated</option>
+          <option value="newest">Newest</option>
+          <option value="price_asc">Price: low to high</option>
+          <option value="price_desc">Price: high to low</option>
         </select>
-
-        {view === "services" && (
-          <>
-            <select
-              value={searchParams.get("duration") ?? ""}
-              onChange={(e) => setParams({ duration: e.target.value || null })}
-              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm cursor-pointer"
-            >
-              <option value="">Any duration</option>
-              {DURATIONS.map((d) => (
-                <option key={d} value={d}>
-                  {d} min
-                </option>
-              ))}
-            </select>
-            <Input
-              key={`min-${searchParams.get("price_min")}`}
-              type="number"
-              min={0}
-              placeholder="Min $"
-              defaultValue={searchParams.get("price_min") ?? ""}
-              onBlur={(e) => setParams({ price_min: e.target.value || null })}
-              className="w-24"
-            />
-            <Input
-              key={`max-${searchParams.get("price_max")}`}
-              type="number"
-              min={0}
-              placeholder="Max $"
-              defaultValue={searchParams.get("price_max") ?? ""}
-              onBlur={(e) => setParams({ price_max: e.target.value || null })}
-              className="w-24"
-            />
-          </>
-        )}
       </div>
 
       <div className="flex flex-wrap gap-1.5">
