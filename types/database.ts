@@ -154,8 +154,20 @@ export interface Database {
         Relationships: [];
       };
       availability_blocks: {
-        Row: { id: string; practitioner_id: string; blocked_date: string };
-        Insert: { id?: string; practitioner_id: string; blocked_date: string };
+        Row: {
+          id: string;
+          practitioner_id: string;
+          blocked_date: string;
+          start_time: string | null;
+          end_time: string | null;
+        };
+        Insert: {
+          id?: string;
+          practitioner_id: string;
+          blocked_date: string;
+          start_time?: string | null;
+          end_time?: string | null;
+        };
         Update: never;
         Relationships: [];
       };

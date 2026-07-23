@@ -32,9 +32,14 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="flex items-center justify-between border-b border-border px-6 py-4">
-        <Link href="/" className="font-heading text-lg font-semibold tracking-tight">
-          Seudo
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link href="/" className="font-heading text-lg font-semibold tracking-tight">
+            Seudo
+          </Link>
+          <Link href="/practitioners" className="text-sm text-muted-foreground hover:text-foreground">
+            Browse practitioners
+          </Link>
+        </div>
         <div className="flex items-center gap-4">
           {profile && (
             <span className="text-sm text-muted-foreground">

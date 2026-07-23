@@ -11,7 +11,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("availability_blocks")
-    .select("id, blocked_date")
+    .select("id, blocked_date, start_time, end_time")
     .eq("practitioner_id", user.id)
     .order("blocked_date");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -34,12 +34,17 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabase
     .from("availability_blocks")
-    .insert({ practitioner_id: user.id, blocked_date: parsed.data.blocked_date })
+    .insert({
+      practitioner_id: user.id,
+      blocked_date: parsed.data.blocked_date,
+      start_time: parsed.data.start_time ?? null,
+      end_time: parsed.data.end_time ?? null,
+    })
     .select()
     .single();
   if (error) {
     if (error.code === "23505") {
-      return NextResponse.json({ error: "That date is already blocked" }, { status: 409 });
+      return NextResponse.json({ error: "That date (or time range) is already blocked" }, { status: 409 });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -47,6 +52,8 @@ export async function POST(request: Request) {
   return NextResponse.json(data, { status: 201 });
 }
 
+// Deletes by id, not by date — a date can now have multiple partial-time
+// blocks, so "the block for this date" is no longer unambiguous.
 export async function DELETE(request: Request) {
   const supabase = await createClient();
   const {
@@ -55,16 +62,14 @@ export async function DELETE(request: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json().catch(() => null);
-  const parsed = availabilityBlockSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
-  }
+  const id = typeof body?.id === "string" ? body.id : null;
+  if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
 
   const { error } = await supabase
     .from("availability_blocks")
     .delete()
     .eq("practitioner_id", user.id)
-    .eq("blocked_date", parsed.data.blocked_date);
+    .eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({ success: true });

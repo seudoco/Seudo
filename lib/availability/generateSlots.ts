@@ -13,11 +13,22 @@ export interface ExistingBookingRange {
   scheduled_end: string;
 }
 
+/** A practitioner is available every day at all times by default (the
+ * weeklyTemplate rows below are still the mechanism, but the UI always
+ * writes a full 00:00-23:59 row per day unless the practitioner narrows it —
+ * see components/dashboard/WorkingHours.tsx). Blocking carves out exceptions:
+ * start_time/end_time both null blocks the whole date; both set blocks only
+ * that time range within the date. */
+export interface AvailabilityBlockRow {
+  blocked_date: string; // "YYYY-MM-DD", practitioner-local
+  start_time: string | null;
+  end_time: string | null;
+}
+
 export interface GenerateSlotsParams {
   timezone: string; // IANA, e.g. "Europe/Copenhagen"
   weeklyTemplate: AvailabilityTemplateRow[];
-  /** "YYYY-MM-DD" dates in the practitioner's local calendar. */
-  blockedDates: string[];
+  blockedRanges: AvailabilityBlockRow[];
   /** Pre-filtered by the caller to status in ('pending','confirmed') — this
    * function has no DB access, it just avoids proposing a slot that overlaps
    * one of these. */
@@ -41,6 +52,11 @@ function parseTimeToMinutes(t: string): number {
   return h * 60 + m;
 }
 
+function parseHM(t: string): [number, number] {
+  const [h, m] = t.split(":").map(Number);
+  return [h, m];
+}
+
 function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
   return aStart < bEnd && aEnd > bStart;
 }
@@ -48,7 +64,7 @@ function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
 export function generateSlots({
   timezone,
   weeklyTemplate,
-  blockedDates,
+  blockedRanges,
   existingBookings,
   serviceDurationMinutes,
   now = new Date(),
@@ -56,7 +72,21 @@ export function generateSlots({
   minimumNoticeHours = 2,
 }: GenerateSlotsParams): Slot[] {
   const earliestBookable = new Date(now.getTime() + minimumNoticeHours * 60 * 60 * 1000);
-  const blockedSet = new Set(blockedDates);
+
+  // Fast path: whole-day blocks (both times null) just skip the date outright.
+  const fullyBlockedDates = new Set(
+    blockedRanges.filter((b) => !b.start_time && !b.end_time).map((b) => b.blocked_date)
+  );
+  // Partial-day blocks are grouped by date so the per-slot check below only
+  // scans the (usually small) set relevant to that specific day.
+  const partialBlocksByDate = new Map<string, AvailabilityBlockRow[]>();
+  for (const b of blockedRanges) {
+    if (!b.start_time || !b.end_time) continue;
+    const list = partialBlocksByDate.get(b.blocked_date) ?? [];
+    list.push(b);
+    partialBlocksByDate.set(b.blocked_date, list);
+  }
+
   const templateByDay = new Map<number, AvailabilityTemplateRow[]>();
   for (const row of weeklyTemplate) {
     const list = templateByDay.get(row.day_of_week) ?? [];
@@ -101,10 +131,25 @@ export function generateSlots({
       cursorDate
     ).padStart(2, "0")}`;
 
-    if (blockedSet.has(dateStr)) continue;
+    if (fullyBlockedDates.has(dateStr)) continue;
 
     const rows = templateByDay.get(dayOfWeek);
     if (!rows) continue;
+
+    // Resolve this date's partial-time blocks to real UTC instant ranges
+    // once per day (not once per candidate slot) — same fromZonedTime
+    // treatment as slot times, since a block's local time needs the same
+    // DST-correct resolution a booking slot does.
+    const dayPartialBlocks = (partialBlocksByDate.get(dateStr) ?? []).map((b) => ({
+      start: fromZonedTime(
+        new Date(cursorYear, cursorMonth, cursorDate, ...parseHM(b.start_time!)),
+        timezone
+      ),
+      end: fromZonedTime(
+        new Date(cursorYear, cursorMonth, cursorDate, ...parseHM(b.end_time!)),
+        timezone
+      ),
+    }));
 
     for (const row of rows) {
       const startMin = parseTimeToMinutes(row.start_time);
@@ -134,6 +179,7 @@ export function generateSlots({
 
         if (slotStart < earliestBookable) continue;
         if (existingRanges.some((r) => overlaps(slotStart, slotEnd, r.start, r.end))) continue;
+        if (dayPartialBlocks.some((b) => overlaps(slotStart, slotEnd, b.start, b.end))) continue;
 
         slots.push({ start: slotStart.toISOString(), end: slotEnd.toISOString() });
       }

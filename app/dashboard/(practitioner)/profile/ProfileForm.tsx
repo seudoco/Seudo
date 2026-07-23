@@ -1,12 +1,15 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AsyncSearchableSelect, SearchableSelect } from "@/components/ui/searchable-select";
+import { MultiSearchableSelect } from "@/components/ui/multi-searchable-select";
+import { PhotoCropDialog } from "@/components/dashboard/PhotoCropDialog";
 
 interface ProfileFormValues {
   display_name: string;
@@ -23,25 +26,62 @@ interface ProfileFormValues {
 export function ProfileForm({
   initial,
   allSpecialties,
+  countryOptions,
+  languageOptions,
+  timezoneOptions,
 }: {
   initial: ProfileFormValues;
   allSpecialties: { id: number; name: string }[];
+  countryOptions: string[];
+  languageOptions: string[];
+  timezoneOptions: string[];
 }) {
   const [values, setValues] = useState(initial);
-  const [languagesInput, setLanguagesInput] = useState(initial.languages.join(", "));
   const [photoUrl, setPhotoUrl] = useState(initial.photo_url);
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [pendingImageSrc, setPendingImageSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const countryRef = useRef(values.country);
 
-  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  countryRef.current = values.country;
+
+  const fetchCities = useCallback(async (query: string) => {
+    const country = countryRef.current;
+    if (!country) return [];
+
+    const params = new URLSearchParams({ country, q: query });
+    const res = await fetch(`/api/geo/cities?${params.toString()}`);
+    if (!res.ok) return [];
+
+    const data = (await res.json()) as { cities?: string[] };
+    return data.cities ?? [];
+  }, []);
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Don't upload yet — open the crop dialog first so a practitioner can
+    // resize/reposition (e.g. fit a logo into the circular preview) before
+    // anything hits storage. The actual upload happens in handleCropSave.
+    const reader = new FileReader();
+    reader.onload = () => setPendingImageSrc(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function handleCropCancel() {
+    setPendingImageSrc(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleCropSave(blob: Blob) {
+    setPendingImageSrc(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setUploadingPhoto(true);
     setMessage(null);
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", new File([blob], "photo.jpg", { type: "image/jpeg" }));
     const res = await fetch("/api/practitioner/profile/photo", { method: "POST", body: formData });
     const data = await res.json();
     setUploadingPhoto(false);
@@ -57,15 +97,10 @@ export function ProfileForm({
     setSaving(true);
     setMessage(null);
 
-    const languages = languagesInput
-      .split(",")
-      .map((l) => l.trim())
-      .filter(Boolean);
-
     const res = await fetch("/api/practitioner/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...values, languages }),
+      body: JSON.stringify(values),
     });
     const data = await res.json();
     setSaving(false);
@@ -140,32 +175,44 @@ export function ProfileForm({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="city">City</Label>
-          <Input
-            id="city"
-            value={values.city}
-            onChange={(e) => setValues((v) => ({ ...v, city: e.target.value }))}
+          <Label htmlFor="country">Country</Label>
+          <SearchableSelect
+            id="country"
+            value={values.country}
+            onValueChange={(country) =>
+              setValues((v) => ({
+                ...v,
+                country,
+                city: country === v.country ? v.city : "",
+              }))
+            }
+            items={countryOptions}
+            placeholder="Search countries…"
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="country">Country</Label>
-          <Input
-            id="country"
-            value={values.country}
-            onChange={(e) => setValues((v) => ({ ...v, country: e.target.value }))}
+          <Label htmlFor="city">City</Label>
+          <AsyncSearchableSelect
+            id="city"
+            value={values.city}
+            onValueChange={(city) => setValues((v) => ({ ...v, city }))}
+            fetchItems={fetchCities}
+            disabled={!values.country}
+            placeholder="Search cities…"
+            emptyMessage="No cities found"
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="languages">Languages</Label>
-        <Input
+        <MultiSearchableSelect
           id="languages"
-          value={languagesInput}
-          onChange={(e) => setLanguagesInput(e.target.value)}
-          placeholder="English, Danish"
+          value={values.languages}
+          onValueChange={(languages) => setValues((v) => ({ ...v, languages }))}
+          items={languageOptions}
+          placeholder="Search languages…"
         />
-        <p className="text-xs text-muted-foreground">Comma-separated.</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -187,12 +234,13 @@ export function ProfileForm({
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="timezone">Timezone</Label>
-          <Input
+          <SearchableSelect
             id="timezone"
             value={values.timezone}
-            onChange={(e) => setValues((v) => ({ ...v, timezone: e.target.value }))}
+            onValueChange={(timezone) => setValues((v) => ({ ...v, timezone }))}
+            items={timezoneOptions}
+            placeholder="Search timezones…"
           />
-          <p className="text-xs text-muted-foreground">IANA name, e.g. Europe/Copenhagen.</p>
         </div>
       </div>
 
@@ -223,6 +271,13 @@ export function ProfileForm({
       <Button type="submit" disabled={saving} className="w-fit cursor-pointer">
         {saving ? "Saving…" : "Save profile"}
       </Button>
+
+      <PhotoCropDialog
+        imageSrc={pendingImageSrc}
+        open={pendingImageSrc !== null}
+        onCancel={handleCropCancel}
+        onSave={handleCropSave}
+      />
     </form>
   );
 }

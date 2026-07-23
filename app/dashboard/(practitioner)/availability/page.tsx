@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AvailabilityWeeklyGrid } from "@/components/dashboard/AvailabilityWeeklyGrid";
+import { WorkingHours } from "@/components/dashboard/WorkingHours";
 import { BlockedDatesManager } from "./BlockedDatesManager";
 
 export default async function AvailabilityPage() {
@@ -18,7 +18,7 @@ export default async function AvailabilityPage() {
       .order("day_of_week"),
     supabase
       .from("availability_blocks")
-      .select("id, blocked_date")
+      .select("id, blocked_date, start_time, end_time")
       .eq("practitioner_id", user.id)
       .order("blocked_date"),
   ]);
@@ -27,13 +27,10 @@ export default async function AvailabilityPage() {
     <div className="flex flex-col gap-10">
       <div>
         <h1 className="font-heading text-2xl font-semibold text-foreground">Availability</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Set your weekly hours, then block off any specific dates you&apos;re not available.
-        </p>
-        <AvailabilityWeeklyGrid initialRows={template ?? []} />
+        <WorkingHours initialRows={template ?? []} />
       </div>
       <div>
-        <h2 className="font-heading text-xl font-semibold text-foreground">Blocked dates</h2>
+        <h2 className="font-heading text-xl font-semibold text-foreground">Blocked dates &amp; times</h2>
         <BlockedDatesManager initialBlocks={blocks ?? []} />
       </div>
     </div>
