@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { searchPractitioners } from "@/lib/practitioners/search";
+import { searchServiceListings } from "@/lib/practitioners/search";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const page = Number(params.get("page") ?? "1") || 1;
   const sort = params.get("sort");
 
-  const result = await searchPractitioners(supabase, {
+  const result = await searchServiceListings(supabase, {
     q,
     specialty,
     page,

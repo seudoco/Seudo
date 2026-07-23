@@ -226,7 +226,7 @@ export default async function PractitionerProfilePage({
       ) : (
         <ul className="mt-4 flex flex-col gap-3">
           {activeServices.map((s) => (
-            <li key={s.id} className="rounded-xl border border-border p-4">
+            <li key={s.id} id={`service-${s.id}`} className="scroll-mt-6 rounded-xl border border-border p-4 target:ring-2 target:ring-foreground">
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex items-center gap-2">
                   <p className="min-w-0 break-words font-medium text-foreground">{s.title}</p>

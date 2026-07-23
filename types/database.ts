@@ -266,6 +266,10 @@ export interface Database {
         Args: { search_term: string };
         Returns: { id: number }[];
       };
+      search_services_fuzzy: {
+        Args: { search_term: string };
+        Returns: { service_id: string }[];
+      };
     };
   };
 }
