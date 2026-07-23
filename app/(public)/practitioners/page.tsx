@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
+import { AuroraBackground } from "@/components/layout/AuroraBackground";
 import { PractitionerCard, type PractitionerCardData } from "@/components/practitioners/PractitionerCard";
 
 export const metadata: Metadata = {
@@ -57,7 +58,8 @@ export default async function PractitionersPage() {
   });
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-12">
+    <div className="relative mx-auto max-w-5xl px-6 py-12">
+      <AuroraBackground intensity="subtle" />
       <h1 className="font-heading text-3xl font-semibold text-foreground">Practitioners</h1>
       <p className="mt-2 text-muted-foreground">Browse vetted tarot readers, astrologers, healers, and coaches.</p>
 

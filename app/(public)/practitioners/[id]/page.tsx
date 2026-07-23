@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
+import { AuroraBackground } from "@/components/layout/AuroraBackground";
 import { specialtyColor } from "@/lib/specialty-colors";
 
 // Explicit shape for this joined query — the hand-written types/database.ts
@@ -118,7 +119,8 @@ export default async function PractitionerProfilePage({
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-6 py-12">
+    <div className="relative mx-auto max-w-2xl px-6 py-12">
+      <AuroraBackground intensity="subtle" />
       {practitioner.is_published && (
         <script
           type="application/ld+json"

@@ -21,7 +21,7 @@ export default async function PublicLayout({
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
+      <header className="relative z-10 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <Link href="/" className="font-heading text-lg font-semibold tracking-tight">
           Seudo
         </Link>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AuroraBackground } from "@/components/layout/AuroraBackground";
 import { specialtyColor } from "@/lib/specialty-colors";
 
 const FEATURED_SPECIALTIES = ["Tarot", "Astrology", "Reiki", "Spiritual Coaching"];
@@ -19,19 +20,7 @@ export default async function Home() {
 
   return (
     <div className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 py-24 text-center">
-      {/* Soft multi-hue wash behind the hero — the "more exciting, still premium"
-          fix: a faint aurora of the same jewel tones used for specialty badges,
-          not a flat monochrome background. Purely decorative, aria-hidden. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.16]"
-        style={{
-          background:
-            "radial-gradient(38rem 24rem at 18% 15%, #6D28D9, transparent 60%)," +
-            "radial-gradient(34rem 22rem at 85% 20%, #0369A1, transparent 60%)," +
-            "radial-gradient(40rem 26rem at 50% 95%, #B45309, transparent 60%)",
-        }}
-      />
+      <AuroraBackground intensity="hero" />
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
         <h1 className="font-heading text-5xl font-semibold tracking-tight text-foreground sm:text-7xl">

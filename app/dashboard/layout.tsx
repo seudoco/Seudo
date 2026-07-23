@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOutAction } from "@/app/(auth)/actions";
 import { Button } from "@/components/ui/button";
+import { AuroraBackground } from "@/components/layout/AuroraBackground";
 
 // proxy.ts already guarantees an authenticated user reaches this layout —
 // the check below is defensive (also fixes TS narrowing profile off the
@@ -30,8 +31,9 @@ export default async function DashboardLayout({
     .single();
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
-      <header className="flex items-center justify-between border-b border-border px-6 py-4">
+    <div className="relative flex min-h-full flex-1 flex-col">
+      <AuroraBackground intensity="subtle" />
+      <header className="relative z-10 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <div className="flex items-center gap-6">
           <Link href="/" className="font-heading text-lg font-semibold tracking-tight">
             Seudo
