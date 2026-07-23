@@ -14,7 +14,7 @@ export default async function Home() {
   if (user) redirect("/practitioners");
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
       <h1 className="font-heading text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
         Seudo
       </h1>
@@ -32,6 +32,6 @@ export default async function Home() {
           </Button>
         </Link>
       </div>
-    </main>
+    </div>
   );
 }
