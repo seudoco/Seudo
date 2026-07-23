@@ -3,9 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 
 // A practitioner who hasn't published yet always lands on the onboarding
 // checklist first — matches the plan's "guided post-signup onboarding"
-// requirement. Once published, or for clients, this is a placeholder home
-// (client browse/booking content and the published-practitioner dashboard —
-// earnings, upcoming bookings — arrive in later phases).
+// requirement. Once published, they land on their profile editor (with the
+// Profile/Services/Availability nav) instead of a dead-end welcome page —
+// there was no way back to edit a listing once it was live. Client browse/
+// booking content and a real published-practitioner dashboard (earnings,
+// upcoming bookings) arrive in later phases.
 export default async function DashboardPage() {
   const supabase = await createClient();
   const {
@@ -29,9 +31,7 @@ export default async function DashboardPage() {
       .eq("profile_id", user.id)
       .single();
 
-    if (!practitionerProfile?.is_published) {
-      redirect("/dashboard/onboarding");
-    }
+    redirect(practitionerProfile?.is_published ? "/dashboard/profile" : "/dashboard/onboarding");
   }
 
   return (

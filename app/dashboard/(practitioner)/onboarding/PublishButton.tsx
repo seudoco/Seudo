@@ -41,7 +41,7 @@ export function PublishButton({
         {saving ? "Saving…" : published ? "Unpublish listing" : "Publish listing"}
       </Button>
       {published && (
-        <p className="mt-2 text-sm text-foreground" role="status">
+        <p className="mt-2 text-sm font-medium text-success" role="status">
           Your listing is live — clients can find and book you.
         </p>
       )}

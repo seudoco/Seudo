@@ -1,5 +1,14 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/button";
 import { PractitionerCard, type PractitionerCardData } from "@/components/practitioners/PractitionerCard";
+
+export const metadata: Metadata = {
+  title: "Browse practitioners | Seudo",
+  description:
+    "Browse vetted tarot readers, astrologers, reiki healers, and spiritual coaches. Book a live one-on-one session.",
+};
 
 // Explicit shape for this joined query — see the same note in
 // app/practitioners/[id]/page.tsx (no FK Relationships metadata in the
@@ -53,11 +62,25 @@ export default async function PractitionersPage() {
       <p className="mt-2 text-muted-foreground">Browse vetted tarot readers, astrologers, healers, and coaches.</p>
 
       {cards.length === 0 ? (
-        <p className="mt-10 text-muted-foreground">No published practitioners yet — check back soon.</p>
+        <div className="mt-16 flex flex-col items-center gap-3 text-center">
+          <p className="text-lg font-medium text-foreground">The first listing hasn&apos;t landed yet</p>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Seudo is brand new — be the first practitioner to publish a listing and get seen here.
+          </p>
+          <Link href="/signup?role=practitioner" className="mt-2">
+            <Button className="cursor-pointer">List your services</Button>
+          </Link>
+        </div>
       ) : (
         <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {cards.map((p) => (
-            <PractitionerCard key={p.profile_id} practitioner={p} />
+          {cards.map((p, i) => (
+            <div
+              key={p.profile_id}
+              className="animate-in fade-in slide-in-from-bottom-2 fill-mode-backwards duration-500"
+              style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}
+            >
+              <PractitionerCard practitioner={p} />
+            </div>
           ))}
         </div>
       )}

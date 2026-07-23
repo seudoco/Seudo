@@ -1,7 +1,9 @@
 import Image from "next/image";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
+import { specialtyColor } from "@/lib/specialty-colors";
 
 // Explicit shape for this joined query — the hand-written types/database.ts
 // (see its top comment) has no FK "Relationships" metadata, so nested
@@ -29,6 +31,38 @@ interface PractitionerDetail {
     price_usd: number;
     is_active: boolean;
   }[];
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const { data: practitioner } = await supabase
+    .from("practitioner_profiles")
+    .select("display_name, bio, city, country, photo_url, is_published")
+    .eq("profile_id", id)
+    .single();
+
+  if (!practitioner || !practitioner.is_published) return { title: "Practitioner — Seudo" };
+
+  const location = [practitioner.city, practitioner.country].filter(Boolean).join(", ");
+  const title = `${practitioner.display_name}${location ? ` — ${location}` : ""} | Seudo`;
+  const description =
+    practitioner.bio?.slice(0, 155) ??
+    `Book a live session with ${practitioner.display_name} on Seudo.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: practitioner.photo_url ? [practitioner.photo_url] : undefined,
+    },
+  };
 }
 
 export default async function PractitionerProfilePage({
@@ -62,8 +96,36 @@ export default async function PractitionerProfilePage({
     .filter((n): n is string => Boolean(n));
   const activeServices = (practitioner.services ?? []).filter((s) => s.is_active);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: practitioner.display_name,
+    description: practitioner.bio ?? undefined,
+    image: practitioner.photo_url ?? undefined,
+    address: practitioner.city || practitioner.country
+      ? { "@type": "PostalAddress", addressLocality: practitioner.city ?? undefined, addressCountry: practitioner.country ?? undefined }
+      : undefined,
+    knowsAbout: specialtyNames.length > 0 ? specialtyNames : undefined,
+    aggregateRating: practitioner.avg_rating
+      ? { "@type": "AggregateRating", ratingValue: practitioner.avg_rating, reviewCount: practitioner.review_count }
+      : undefined,
+    makesOffer: activeServices.map((s) => ({
+      "@type": "Offer",
+      itemOffered: { "@type": "Service", name: s.title, description: s.description ?? undefined },
+      price: s.price_usd,
+      priceCurrency: "USD",
+    })),
+  };
+
   return (
     <div className="mx-auto max-w-2xl px-6 py-12">
+      {practitioner.is_published && (
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      )}
       {isOwnerPreview && (
         <div className="mb-6 rounded-lg border border-border bg-secondary px-4 py-3 text-sm text-foreground">
           This is a preview — your listing isn&apos;t public yet. Publish it from your dashboard to go live.
@@ -71,7 +133,14 @@ export default async function PractitionerProfilePage({
       )}
 
       <div className="flex items-center gap-4">
-        <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary">
+        <div
+          className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full bg-secondary ring-2 ring-offset-2 ring-offset-background"
+          style={{
+            ["--tw-ring-color" as string]: specialtyNames[0]
+              ? specialtyColor(specialtyNames[0]).text
+              : "var(--border)",
+          }}
+        >
           {practitioner.photo_url ? (
             <Image
               src={practitioner.photo_url}
@@ -95,20 +164,33 @@ export default async function PractitionerProfilePage({
             </p>
           )}
           <p className="mt-1 text-sm text-muted-foreground">
-            {practitioner.avg_rating
-              ? `★ ${practitioner.avg_rating.toFixed(1)} (${practitioner.review_count} reviews)`
-              : "New practitioner"}
+            {practitioner.avg_rating ? (
+              <>
+                <span className="text-accent">★</span> {practitioner.avg_rating.toFixed(1)} (
+                {practitioner.review_count} reviews)
+              </>
+            ) : (
+              "New practitioner"
+            )}
           </p>
         </div>
       </div>
 
       {specialtyNames.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-1.5">
-          {specialtyNames.map((name) => (
-            <Badge key={name} variant="secondary">
-              {name}
-            </Badge>
-          ))}
+          {specialtyNames.map((name) => {
+            const color = specialtyColor(name);
+            return (
+              <Badge
+                key={name}
+                variant="outline"
+                className="border-transparent"
+                style={{ backgroundColor: color.bg, color: color.text }}
+              >
+                {name}
+              </Badge>
+            );
+          })}
         </div>
       )}
 

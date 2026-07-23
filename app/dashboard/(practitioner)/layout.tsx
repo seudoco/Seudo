@@ -5,6 +5,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/profile", label: "Profile" },
   { href: "/dashboard/services", label: "Services" },
   { href: "/dashboard/availability", label: "Availability" },
+  { href: "/dashboard/onboarding", label: "Listing status" },
 ];
 
 export default function PractitionerDashboardLayout({
