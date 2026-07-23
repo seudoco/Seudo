@@ -34,21 +34,20 @@ async function resolvePractitionerIdsForSpecialty(
 
 /** Free-text search: matches name/bio/city/country directly, OR a specialty
  * whose name contains the term (so typing "tarot" surfaces every
- * practitioner tagged Tarot, not just ones with the word in their bio). */
+ * practitioner tagged Tarot, not just ones with the word in their bio).
+ * Both go through `search_*_fuzzy` Postgres functions (see
+ * supabase/migrations/0007_fuzzy_search.sql) so a typo like "tarrot" still
+ * matches via pg_trgm similarity, not just exact ILIKE substrings. */
 async function resolvePractitionerIdsForQuery(
   supabase: SupabaseClient<Database>,
   term: string
 ): Promise<Set<string>> {
   const ids = new Set<string>();
 
-  const { data: direct } = await supabase
-    .from("practitioner_profiles")
-    .select("profile_id")
-    .eq("is_published", true)
-    .or(`display_name.ilike.%${term}%,bio.ilike.%${term}%,city.ilike.%${term}%,country.ilike.%${term}%`);
+  const { data: direct } = await supabase.rpc("search_practitioners_fuzzy", { search_term: term });
   for (const row of direct ?? []) ids.add(row.profile_id);
 
-  const { data: matchingSpecialties } = await supabase.from("specialties").select("id").ilike("name", `%${term}%`);
+  const { data: matchingSpecialties } = await supabase.rpc("search_specialties_fuzzy", { search_term: term });
   if (matchingSpecialties && matchingSpecialties.length > 0) {
     const { data: links } = await supabase
       .from("practitioner_specialties")

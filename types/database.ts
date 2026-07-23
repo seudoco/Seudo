@@ -255,6 +255,15 @@ export interface Database {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      search_practitioners_fuzzy: {
+        Args: { search_term: string };
+        Returns: { profile_id: string }[];
+      };
+      search_specialties_fuzzy: {
+        Args: { search_term: string };
+        Returns: { id: number }[];
+      };
+    };
   };
 }
