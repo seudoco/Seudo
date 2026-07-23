@@ -11,6 +11,8 @@
   "dependencies": {
     "@base-ui/react": "^1.6.0",
     "@daily-co/daily-js": "^0.91.0",
+    "@stripe/connect-js": "^3.4.6",
+    "@stripe/react-connect-js": "^3.4.4",
     "@stripe/react-stripe-js": "^6.8.0",
     "@stripe/stripe-js": "^9.12.0",
     "@supabase/ssr": "^0.12.3",

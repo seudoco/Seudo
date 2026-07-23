@@ -88,6 +88,9 @@ export interface Database {
           years_experience?: number | null;
           timezone?: string | null;
           is_published?: boolean;
+          stripe_connect_account_id?: string | null;
+          stripe_connect_onboarded?: boolean;
+          onboarding_completed_at?: string | null;
         };
         Update: Partial<
           Omit<Database["public"]["Tables"]["practitioner_profiles"]["Insert"], "profile_id">

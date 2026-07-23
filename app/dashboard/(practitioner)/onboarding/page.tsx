@@ -14,7 +14,7 @@ export default async function OnboardingPage() {
     await Promise.all([
       supabase
         .from("practitioner_profiles")
-        .select("display_name, bio, is_published")
+        .select("display_name, bio, is_published, stripe_connect_onboarded")
         .eq("profile_id", user.id)
         .single(),
       supabase.from("practitioner_specialties").select("*", { count: "exact", head: true }).eq("practitioner_id", user.id),
@@ -48,8 +48,8 @@ export default async function OnboardingPage() {
         <Step done={availabilityDone} href="/dashboard/availability" title="Set your availability">
           At least one open window in your weekly schedule.
         </Step>
-        <Step done={false} href="/dashboard/payouts" title="Set up your payouts" disabled>
-          Coming once payments are live — you can publish before this step.
+        <Step done={profile?.stripe_connect_onboarded ?? false} href="/dashboard/payouts" title="Set up your payouts">
+          Connect Stripe so you can get paid — you can publish before this step.
         </Step>
       </ol>
 
