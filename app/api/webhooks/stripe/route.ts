@@ -43,6 +43,65 @@ export async function POST(request: NextRequest) {
         .eq("stripe_connect_account_id", account.id);
       break;
     }
+    case "payment_intent.succeeded": {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      const { data: booking } = await supabase
+        .from("bookings")
+        .select("id, scheduled_start, status")
+        .eq("stripe_payment_intent_id", paymentIntent.id)
+        .single();
+      // Only a still-pending booking should be confirmed here — a stray
+      // retry/duplicate delivery after cancellation must not resurrect it.
+      if (booking && booking.status === "pending") {
+        const latestCharge = paymentIntent.latest_charge;
+        await supabase
+          .from("bookings")
+          .update({
+            status: "confirmed",
+            pending_expires_at: null,
+            stripe_charge_id: typeof latestCharge === "string" ? latestCharge : (latestCharge?.id ?? null),
+            // Judgment call (see plan): anchored to scheduled_start + 24h
+            // rather than -24h, so it also covers a late practitioner
+            // cancellation right around the session itself, not just the
+            // client's free-cancellation deadline.
+            payout_eligible_at: new Date(
+              new Date(booking.scheduled_start).getTime() + 24 * 60 * 60 * 1000
+            ).toISOString(),
+          })
+          .eq("id", booking.id);
+      }
+      break;
+    }
+    case "payment_intent.payment_failed":
+    case "payment_intent.canceled": {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      // Free the slot immediately rather than waiting for the (not yet
+      // built) expired-pending cron sweep — the exclusion constraint only
+      // blocks 'pending'/'confirmed', so this unblocks the slot right away.
+      await supabase
+        .from("bookings")
+        .update({ status: "expired", pending_expires_at: null })
+        .eq("stripe_payment_intent_id", paymentIntent.id)
+        .eq("status", "pending");
+      break;
+    }
+    case "charge.refunded": {
+      // Safety-net reconciliation in case a refund is ever issued directly
+      // from the Stripe dashboard rather than through
+      // /api/bookings/[id]/cancel — that route already sets
+      // cancelled_refunded itself, so this only needs to catch bookings
+      // that are still 'confirmed' despite the underlying charge being
+      // refunded.
+      const charge = event.data.object as Stripe.Charge;
+      if (charge.refunded) {
+        await supabase
+          .from("bookings")
+          .update({ status: "cancelled_refunded" })
+          .eq("stripe_charge_id", charge.id)
+          .eq("status", "confirmed");
+      }
+      break;
+    }
     default:
       break;
   }

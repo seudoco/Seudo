@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { AuroraBackground } from "@/components/layout/AuroraBackground";
+import { SlotPicker } from "@/components/booking/SlotPicker";
 import { specialtyColor } from "@/lib/specialty-colors";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ interface ServiceDetail {
     display_name: string | null;
     photo_url: string | null;
     is_published: boolean;
+    stripe_connect_onboarded: boolean;
     avg_rating: number | null;
     review_count: number;
   } | null;
@@ -36,7 +38,7 @@ async function fetchService(id: string, serviceId: string) {
   const { data: service } = await supabase
     .from("services")
     .select<string, ServiceDetail>(
-      "id, title, description, duration_minutes, price_usd, is_active, specialties(name), practitioner_profiles!inner(profile_id, display_name, photo_url, is_published, avg_rating, review_count)"
+      "id, title, description, duration_minutes, price_usd, is_active, specialties(name), practitioner_profiles!inner(profile_id, display_name, photo_url, is_published, stripe_connect_onboarded, avg_rating, review_count)"
     )
     .eq("id", serviceId)
     .eq("practitioner_id", id)
@@ -149,9 +151,22 @@ export default async function ServiceDetailPage({
         </div>
       </Link>
 
-      <p className="mt-6 text-sm text-muted-foreground">
-        Booking opens once payments are live — check back soon.
-      </p>
+      {user?.id === practitioner.profile_id ? null : practitioner.stripe_connect_onboarded ? (
+        <div className="mt-10">
+          <h2 className="font-heading text-xl font-semibold text-foreground">Choose a time</h2>
+          <div className="mt-4">
+            <SlotPicker
+              practitionerId={practitioner.profile_id}
+              serviceId={service.id}
+              isLoggedIn={Boolean(user)}
+            />
+          </div>
+        </div>
+      ) : (
+        <p className="mt-6 text-sm text-muted-foreground">
+          Booking opens once this practitioner finishes setting up payouts — check back soon.
+        </p>
+      )}
     </div>
   );
 }
