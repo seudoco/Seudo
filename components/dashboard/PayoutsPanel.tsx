@@ -20,15 +20,23 @@ export function PayoutsPanel({ initiallyOnboarded }: { initiallyOnboarded: boole
 
   if (onboarded) {
     return (
-      <div className="mt-6 rounded-xl border border-success/30 bg-success/5 p-4">
-        <p className="text-sm font-medium text-success">Payouts are set up — you can now receive bookings.</p>
-      </div>
+      <p className="mt-8 text-sm text-muted-foreground">
+        <span className="font-medium text-success">Payouts connected.</span> You&apos;re all set to get paid for
+        your sessions.
+      </p>
     );
   }
 
   return (
-    <div className="mt-6">
-      <StripeConnectOnboardingWidget onOnboarded={refreshStatus} />
+    <div className="mt-6 rounded-2xl border border-border p-8 text-center">
+      <p className="text-lg font-medium text-foreground">Get paid for your sessions</p>
+      <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
+        Add your payout details so clients can book you and money lands straight in your account after each
+        session.
+      </p>
+      <div className="mt-6">
+        <StripeConnectOnboardingWidget onOnboarded={refreshStatus} />
+      </div>
       {checking && <p className="mt-2 text-sm text-muted-foreground">Checking status…</p>}
     </div>
   );

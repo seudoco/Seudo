@@ -49,7 +49,7 @@ export default async function OnboardingPage() {
           At least one open window in your weekly schedule.
         </Step>
         <Step done={profile?.stripe_connect_onboarded ?? false} href="/dashboard/payouts" title="Set up your payouts">
-          Connect Stripe so you can get paid — you can publish before this step.
+          Add your payout details so you can get paid — you can publish before this step.
         </Step>
       </ol>
 

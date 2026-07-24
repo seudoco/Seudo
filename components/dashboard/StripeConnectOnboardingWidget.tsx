@@ -6,7 +6,7 @@ import { ConnectComponentsProvider, ConnectAccountOnboarding } from "@stripe/rea
 
 async function fetchClientSecret(): Promise<string> {
   const res = await fetch("/api/stripe/connect/onboarding-link", { method: "POST" });
-  if (!res.ok) throw new Error("Couldn't start Stripe onboarding");
+  if (!res.ok) throw new Error("Couldn't start payout setup");
   const data = await res.json();
   return data.client_secret;
 }
@@ -34,7 +34,7 @@ export function StripeConnectOnboardingWidget({ onOnboarded }: { onOnboarded: ()
       });
       setInstance(connectInstance);
     } catch {
-      setError("Couldn't load Stripe onboarding. Try refreshing the page.");
+      setError("Couldn't load payout setup. Try refreshing the page.");
     }
   }, []);
 

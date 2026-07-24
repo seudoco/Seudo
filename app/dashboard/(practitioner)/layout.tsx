@@ -5,7 +5,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/profile", label: "Profile" },
   { href: "/dashboard/services", label: "Services" },
   { href: "/dashboard/availability", label: "Availability" },
-  { href: "/dashboard/payouts", label: "Payouts" },
+  { href: "/dashboard/payouts", label: "Earnings" },
   { href: "/dashboard/onboarding", label: "Listing status" },
 ];
 
